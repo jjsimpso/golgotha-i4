@@ -1,0 +1,120 @@
+/********************************************************************** 
+
+    Golgotha Forever - A portable, free 3D strategy and FPS game.
+    Copyright (C) 1999 Golgotha Forever Developers
+
+    Sources contained in this distribution were derived from
+    Crack Dot Com's public release of Golgotha which can be
+    found here:  http://www.crack.com
+
+    All changes and new works are licensed under the GPL:
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    For the full license, see COPYING.
+
+***********************************************************************/
+ 
+
+#include <windows.h>
+#include <windowsx.h>
+
+
+#include "arch.hh"
+#include "time/time.hh"
+#include "time/timedev.hh"
+#include "device/kernel.hh"
+#include "init/init.hh"
+
+i4_time_device_class i4_time_dev;
+
+class i4_time_device_adder_class : public i4_init_class
+{
+  public :
+  void init() 
+  { 
+    i4_kernel.add_device(&i4_time_dev);
+  }
+} i4_time_device_adder_instance;
+
+
+
+i4_bool i4_time_device_class::cancel_event(const id &handle)
+{
+  i4_isl_list<timed_event>::iterator i=events.begin(),last=events.end();
+  for (;i!=events.end();++i)
+  {
+    if (handle.reference==&*i)
+    {
+      if (last==events.end())
+        events.erase();
+      else
+        events.erase_after(last);
+      timeKillEvent(i->win32_timer_id);
+      delete &*i;
+      return i4_T;
+    }
+    last=i;
+  }
+  return i4_F;
+}
+
+i4_bool i4_time_device_class::process_events()       // returns true if an event was dispatched
+{
+  return i4_F;
+}
+
+void CALLBACK win32_timer_callback(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+{
+  i4_time_dev.callback(user);
+}
+
+void i4_time_device_class::callback(w32 user)
+{
+  timed_event *got_event=(timed_event *)(user);
+  got_event->send_to->receive_event(got_event->event);
+
+  if (got_event==&*i4_time_dev.events.begin())
+    events.erase();
+  else
+  {
+    i4_isl_list<timed_event>::iterator i=events.begin(),last=events.end();
+    for (; i->next!=got_event && i!=last; ++i);
+
+    if (i!=last)
+      events.erase_after(i);   
+  }
+  delete got_event;
+}
+
+// who to send the event to
+i4_time_device_class::id i4_time_device_class::request_event(i4_event_handler_class *send_to, 
+                                       i4_event *event,                 // what event to send
+                                       w32 milli_wait) // how much time to wait (in milli-seconds)
+{
+  // first make sure this is not an event that needs to be sent right now
+  // these events usually are two-way events that have return codes inside
+  if (event->when()==i4_event::NOW)
+    i4_error("Cannot send NOW events throught the time device!");
+ 
+  timed_event *ev=new timed_event(send_to,event,milli_wait);
+  events.insert(*ev);
+  ev->win32_timer_id=timeSetEvent(milli_wait,0,
+                                  win32_timer_callback,
+                                  (DWORD)(ev),
+                                  TIME_ONESHOT);
+
+  return id(ev);
+}

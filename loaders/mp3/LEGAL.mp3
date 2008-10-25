@@ -1,0 +1,5 @@
+According to the comments made in the source code,
+it seems the MP3 code was ripped from mpg123.
+In this dir you will find README.mp3 and COPYING.mp3
+from the mpg123 dist.  Please see them for more info.
+
