@@ -1,0 +1,3 @@
+Golgotha uses semaphores.  It seems Linux doesn't have POSIX compliant
+semaphores and since I don't know much about them, they're TODO ;)
+                                                          -- Robert Dale
