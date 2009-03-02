@@ -189,6 +189,7 @@ void x11_display_class::init()
   if (input.display || input.open_display())
   {
     default_depth = XDefaultDepth(input.display, XDefaultScreen(input.display));
+    if(default_depth == 24) default_depth = 32;
     me.add_to_list("X Windows", 0, this, i4_display_list);
     input.close_display();
   }
