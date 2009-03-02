@@ -60,6 +60,8 @@ public:
   x11_shm_extension_class *shm_extension;
 
   x11_display_input_class input;
+  
+  int default_depth;
 
 
   i4_bool open_display();
