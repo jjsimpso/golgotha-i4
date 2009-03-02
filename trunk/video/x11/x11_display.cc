@@ -132,6 +132,8 @@ i4_bool x11_display_class::open_X_window(w32 width, w32 height, i4_display_class
 	    }
 	}
 
+shm_extension = 0;
+
       if (shm_extension)
 	{
 	  i4_warning("looking for MITSHM extension... ");

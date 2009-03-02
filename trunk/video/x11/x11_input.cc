@@ -143,6 +143,8 @@ XVisualInfo *x11_input_class::find_visual_with_depth(int depth)
   } 
   else if (depth==16)
     return find_visual_with_depth(15);
+  else if (depth==32)
+    return find_visual_with_depth(24);
   else
     return 0;
 }
