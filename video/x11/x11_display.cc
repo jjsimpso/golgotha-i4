@@ -103,7 +103,17 @@ i4_bool x11_display_class::open_X_window(w32 width, w32 height, i4_display_class
     f.calc_shift();
 
     f.lookup	  = 0;
-    f.pixel_depth = I4_16BIT;
+
+    switch(default_depth){
+    case 8:
+      f.pixel_depth = I4_8BIT;
+      break;
+    case 16:
+      f.pixel_depth = I4_16BIT;
+      break;
+    default:
+      f.pixel_depth = I4_32BIT;
+    }
 
     pal = i4_pal_man.register_pal(&f);
 
@@ -121,6 +131,7 @@ i4_bool x11_display_class::open_X_window(w32 width, w32 height, i4_display_class
 	      shm_extension = 0;
 	    }
 	}
+
       if (shm_extension)
 	{
 	  i4_warning("looking for MITSHM extension... ");
@@ -177,9 +188,12 @@ void x11_display_class::init()
 {
   if (input.display || input.open_display())
   {
+    default_depth = XDefaultDepth(input.display, XDefaultScreen(input.display));
     me.add_to_list("X Windows", 0, this, i4_display_list);
     input.close_display();
   }
+
+  printf("default_depth = %d\n", default_depth);
 }
 
   // initialize_mode need not call close() to switch to another mode
@@ -194,7 +208,11 @@ i4_bool x11_display_class::initialize_mode()
 
 XVisualInfo *x11_display_class::get_visual(Display *display)
 {
+#if 0
   return input.find_visual_with_depth(DEPTH);
+#else
+  return input.find_visual_with_depth(default_depth);
+#endif
 }
 
 i4_display_class::mode *x11_display_class::get_first_mode(int driver_id)
@@ -208,7 +226,7 @@ i4_display_class::mode *x11_display_class::get_first_mode(int driver_id)
     {
       strcpy(amode.name,"Standard X11 window");
       amode.flags=mode::RESOLUTION_DETERMINED_ON_OPEN;
-      amode.bits_per_pixel=DEPTH;
+      amode.bits_per_pixel=default_depth;
 
       amode.red_mask	= v->red_mask;
       amode.green_mask	= v->green_mask;
@@ -223,6 +241,7 @@ i4_display_class::mode *x11_display_class::get_first_mode(int driver_id)
 		       &x,&y,&w,&h,&bord,&depth)==0)
 	i4_error("can't get root window attributes");
 
+      //i4_error("root window depth = %d\n", depth);
       amode.xres=w;
       amode.yres=h;
 
@@ -279,7 +298,7 @@ void x11_display_class::create_X_image(w32 width, w32 height)
 					      w,h);   // actual width and height from X
     screen=i4_create_image(w,h,pal,
 			   (w8 *)shm_image->data,
-			   w*(DEPTH/8));
+			   w*(default_depth/8));
   }
   else
   {
@@ -288,7 +307,7 @@ void x11_display_class::create_X_image(w32 width, w32 height)
 			  input.my_visual->depth,
 			  ZPixmap,
 			  0,
-			  (char *)malloc(width*height*((DEPTH+7)/8)),
+			  (char *)malloc(width*height*((default_depth+7)/8)),
 			  width,
 			  height,
 			  32,
@@ -296,7 +315,7 @@ void x11_display_class::create_X_image(w32 width, w32 height)
 
     screen=i4_create_image(width, height, pal,
 			   (w8 *)ximage->data,
-			   width*(DEPTH/8));            // bytes per line
+			   width*(default_depth/8));            // bytes per line
 
   }
 
