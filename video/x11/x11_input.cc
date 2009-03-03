@@ -188,6 +188,7 @@ i4_bool x11_input_class::create_window(sw32 x, sw32 y, w32 w, w32 h,
   // this will be 8, 16, or 32, (most likely 16 for now)
   my_visual = visual;
 
+  printf("Info : my_visual->depth = %d\n", my_visual->depth);
 
   if (!my_visual)
     return i4_F;

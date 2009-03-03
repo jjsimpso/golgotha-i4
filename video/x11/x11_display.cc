@@ -132,7 +132,8 @@ i4_bool x11_display_class::open_X_window(w32 width, w32 height, i4_display_class
 	    }
 	}
 
-shm_extension = 0;
+      // Uncomment to disable shm
+      //shm_extension = 0;
 
       if (shm_extension)
 	{
@@ -196,7 +197,7 @@ void x11_display_class::init()
     input.close_display();
   }
 
-  printf("default_depth = %d\n", default_depth);
+  printf("Info : default_depth = %d\n", default_depth);
 }
 
   // initialize_mode need not call close() to switch to another mode

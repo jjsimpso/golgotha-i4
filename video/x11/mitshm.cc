@@ -161,7 +161,8 @@ x11_shm_image_class *x11_shm_extension_actual_class::create_shm_image(Display *d
   // create the shared memory segment
   im->X_shminfo.shmid = shmget (
 				IPC_PRIVATE,
-				width*height*((visual_depth+7)/8),
+				//width*height*((visual_depth+7)/8),
+				im->im->bytes_per_line*im->im->height,
 				IPC_CREAT | 0777
 				);
   if (im->X_shminfo.shmid<0)  
